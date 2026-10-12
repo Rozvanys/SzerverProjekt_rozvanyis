@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="NaploElemzoTests/NaploElemzoTests.csproj" />
+  <Project Path="SzerverProjekt/SzerverProjekt.csproj" />
+</Solution>

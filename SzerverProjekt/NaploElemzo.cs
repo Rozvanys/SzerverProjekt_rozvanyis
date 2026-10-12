@@ -97,13 +97,28 @@ namespace SzerverProjekt
         // 7. JOIN + Aggregáció: Add vissza annak a szervernek a nevét, amelyiken a legtöbb súlyos (Hiba vagy Kritikus) hiba történt!
         public string LegtobbHibasSzerverNeve()
         {
-            throw new NotImplementedException();
-        }
+            return szerverek
+				.Join(naplok,
+					szerver => szerver.Azonosito,
+					naplo => naplo.SzerverAzonosito,
+					(szerver, naplo) => new { Szerver = szerver, Naplo = naplo })
+				.Where(x => x.Naplo.Szint == HibaSzint.Hiba || x.Naplo.Szint == HibaSzint.Kritikus)
+				.GroupBy(x => x.Szerver)
+				.OrderByDescending(g => g.Count())
+				.Select(g => g.Key.Nev)
+				.FirstOrDefault()!;
+		}
 
         // 8. Szűrés időpont alapján: Add vissza a 12:00 óra után történt naplóbejegyzéseket "SzerverNev (Óra:Perc) - Üzenet" formátumban!
         public List<string> DeliNaplokSzerverNevvel()
         {
-            throw new NotImplementedException();
+            return naplok
+                .Where(n => n.Idopont.TimeOfDay > new TimeSpan(12, 0, 0))
+				.Join(szerverek,
+					naplo => naplo.SzerverAzonosito,
+					szerver => szerver.Azonosito,
+					(naplo, szerver) => $"{szerver.Nev} ({naplo.Idopont:HH:mm}) - {naplo.Uzenet}")
+				.ToList();
             
         }
 
@@ -128,37 +143,39 @@ namespace SzerverProjekt
         public List<string> BudapestiSzerverekUzenetei()
         {
             return szerverek
-				.Where(s => s.Helyszin == "Budapest")
-				.Join(naplok,
-					szerver => szerver.Azonosito,
-					naplo => naplo.SzerverAzonosito,
-					(szerver, naplo) => naplo.Uzenet)
-				.ToList();
-		}
+                .Where(s => s.Helyszin == "Budapest")
+                .Join(naplok,
+                    szerver => szerver.Azonosito,
+                    naplo => naplo.SzerverAzonosito,
+                    (szerver, naplo) => naplo.Uzenet)
+                .ToList();
+        }
 
         // 12. Válaszd ki a naplókból a hiba szinteket, és Distinct segítségével add vissza az egyedi előfordulásaikat listában!
         public List<HibaSzint> ElofordultHibaSzintek()
         {
-            throw new NotImplementedException();
+            return naplok.Select(n => n.Szint)
+                .Distinct()
+                .ToList();
         }
 
         // 13. Csoportosítsd a szervereket az OperaciosRendszer tulajdonságuk alapján!
         public IEnumerable<IGrouping<string, Szerver>> SzerverekOsSzerintCsoportositva()
         {
-            throw new NotImplementedException();
+            return szerverek.GroupBy(s => s.OperaciosRendszer);
         }
 
         // 14. Keresd meg és add vissza a legelső "Kritikus" szintű hibanapló objektumot! Ha nincs, adj vissza null-t.
         public Hibanaplo AzelsoKritikusNaplo()
         {
-            return naplok.FirstOrDefault(n => n.Szint == HibaSzint.Kritikus);
+            return naplok.FirstOrDefault(n => n.Szint == HibaSzint.Kritikus)!;
 
 		}
 
         // 15. Számítsd ki, hogy átlagosan hány hibanapló jut egy szerverre (double értékként)!
         public double AtlagosNaploSzamSzerverenkenet()
         {
-            throw new NotImplementedException();
+            return (double)naplok.Count / szerverek.Count;
         }
 
         // 16. Ellenőrizd, hogy a flotta minden egyes szerverének az azonosítója pozitív szám-e (> 0)!
